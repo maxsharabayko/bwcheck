@@ -96,7 +96,7 @@ int tcp_server(const std::string &port)
 
 		boost::asio::io_context io_context;
 
-		server s(io_context, std::atoi(port.c_str()));
+		server s(io_context, stoi(port));
 
 		io_context.run();
 	}

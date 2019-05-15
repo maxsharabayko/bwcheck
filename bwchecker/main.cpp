@@ -3,6 +3,8 @@
 
 int tcp_server(const std::string& port);
 int tcp_client(const std::string& host, const std::string& port);
+int udp_server(const std::string& port);
+int udp_client(const std::string& host, const std::string& port);
 
 // Example implementation
 // https://stackoverflow.com/questions/40831436/cant-explain-poor-bandwidth-performance-using-boost-asio-tcp-sockets
@@ -12,13 +14,14 @@ int main(int argc, char** argv) {
 
 	CLI::App app("SRT xtransmit tool.");
 	app.set_help_all_flag("--help-all", "Expand all help");
+	CLI::Option* use_tcp = app.add_flag("--tcp", "Use TCP");
 
 	std::string host;
 	std::string port;
-	CLI::App* sc_client = app.add_subcommand("client", "Connect to the server");
+	CLI::App* sc_client = app.add_subcommand("client", "Connect to the server")->fallthrough();
 	sc_client->add_option("host", host, "Host");
 	sc_client->add_option("port", port, "Port");
-	CLI::App* sc_server = app.add_subcommand("server", "Start server");
+	CLI::App* sc_server = app.add_subcommand("server", "Start server")->fallthrough();
 	sc_server->add_option("port", port, "Port");
 
 	app.require_subcommand(1);
@@ -29,14 +32,19 @@ int main(int argc, char** argv) {
 	// https://cliutils.gitlab.io/CLI11Tutorial/chapters/an-advanced-example.html
 	if (sc_client->parsed())
 	{
-		return tcp_client(host, port);
+		if (*use_tcp)
+			return tcp_client(host, port);
+		return udp_client(host, port);
 	}
 	
 	if (sc_server->parsed())
 	{
-		return tcp_server(port);
+		if (*use_tcp)
+			return tcp_server(port);
+
+		return udp_server(port);
 	}
-	
+
 	return 0;
 }
 
