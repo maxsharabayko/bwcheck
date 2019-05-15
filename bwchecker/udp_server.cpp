@@ -18,30 +18,30 @@ enum { max_length = 1024 };
 
 void server(boost::asio::io_context& io_context, unsigned short port)
 {
-    udp::socket sock(io_context, udp::endpoint(udp::v4(), port));
-    for (;;)
-    {
-        char data[max_length];
-        udp::endpoint sender_endpoint;
-        size_t length = sock.receive_from(
-            boost::asio::buffer(data, max_length), sender_endpoint);
-        sock.send_to(boost::asio::buffer(data, length), sender_endpoint);
-    }
+	udp::socket sock(io_context, udp::endpoint(udp::v4(), port));
+	for (;;)
+	{
+		char data[max_length];
+		udp::endpoint sender_endpoint;
+		size_t length = sock.receive_from(
+			boost::asio::buffer(data, max_length), sender_endpoint);
+		sock.send_to(boost::asio::buffer(data, length), sender_endpoint);
+	}
 }
 
 int udp_server(const std::string& port)
 {
-    try
-    {
-        boost::asio::io_context io_context;
+	try
+	{
+		boost::asio::io_context io_context;
 
-        server(io_context, stoi(port));
-    }
-    catch (std::exception & e)
-    {
-        std::cerr << "Exception: " << e.what() << "\n";
-    }
+		server(io_context, stoi(port));
+	}
+	catch (std::exception & e)
+	{
+		std::cerr << "Exception: " << e.what() << "\n";
+	}
 
-    return 0;
+	return 0;
 }
 
