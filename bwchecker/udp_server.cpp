@@ -41,7 +41,8 @@ void server(boost::asio::io_context& io_context, unsigned short port, const atom
 			if (bytes == 0)
 				continue;
 
-			cout << "RCV rate: " << std::fixed << std::setprecision(3) << float(bytes * 8) / elapsed_ms.count() / 1000 << " Mbps\n";
+			cout << "RCV rate: " << std::fixed << std::setprecision(3) << float(bytes * 8) / elapsed_ms.count() / 1000 << " Mbps";
+			cout << " (" << bytes << ")\n";
 		}
 	};
 
