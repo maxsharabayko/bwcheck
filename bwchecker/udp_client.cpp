@@ -7,6 +7,7 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
+#include <atomic>
 #include <chrono>
 #include <cstdlib>
 #include <cstring>
@@ -14,11 +15,14 @@
 #include <vector>
 #include <boost/asio.hpp>
 
+#include "config.hpp"
+
 using boost::asio::ip::udp;
 
-enum { max_length = 1024 };
+enum { max_length = 1456 };
 
-int udp_client(const std::string& host, const std::string& port)
+int udp_client(const std::string& host, const std::string& port,
+	const config& cfg, std::atomic_bool &force_break)
 {
 	using namespace std;
 	try
@@ -31,16 +35,12 @@ int udp_client(const std::string& host, const std::string& port)
 		udp::resolver::results_type endpoints =
 			resolver.resolve(udp::v4(), host, port);
 
-		const int bitrate = 6000000;
-		const int message_size = 1456;
-		const int num_messages = 1
-
-		std::vector<char> message_to_send(message_size);
+		std::vector<char> message_to_send(cfg.message_size);
 		std::generate(message_to_send.begin(), message_to_send.end(), [c = 0]() mutable { return c++; });
 
 		auto time_prev = chrono::steady_clock::now();
 		long time_dev_us = 0;
-		const long msgs_per_s = static_cast<long long>(bitrate / 8) / message_size;
+		const long msgs_per_s = static_cast<long long>(cfg.bitrate / 8) / cfg.message_size;
 		const long msg_interval_us = msgs_per_s ? 1000000 / msgs_per_s : 0;
 
 
@@ -64,25 +64,18 @@ int udp_client(const std::string& host, const std::string& port)
 				time_prev = time_now;
 			}
 
-			dst->write(message_to_send);
+			message_to_send[0] = '0' + i % 74;
+
+			s.send_to(boost::asio::buffer(message_to_send, message_to_send.size()), *endpoints.begin());
 		}
 
-
-
-
-		std::cout << "Enter message: ";
-		char request[max_length];
-		std::cin.getline(request, max_length);
-		size_t request_length = std::strlen(request);
-		s.send_to(boost::asio::buffer(request, request_length), *endpoints.begin());
-
-		char reply[max_length];
+		/*char reply[max_length];
 		udp::endpoint sender_endpoint;
 		size_t reply_length = s.receive_from(
 			boost::asio::buffer(reply, max_length), sender_endpoint);
 		std::cout << "Reply is: ";
 		std::cout.write(reply, reply_length);
-		std::cout << "\n";
+		std::cout << "\n";*/
 	}
 	catch (std::exception & e)
 	{

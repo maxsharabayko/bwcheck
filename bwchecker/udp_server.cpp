@@ -14,7 +14,7 @@
 
 using boost::asio::ip::udp;
 
-enum { max_length = 1024 };
+enum { max_length = 1456 };
 
 void server(boost::asio::io_context& io_context, unsigned short port)
 {
@@ -25,7 +25,8 @@ void server(boost::asio::io_context& io_context, unsigned short port)
 		udp::endpoint sender_endpoint;
 		size_t length = sock.receive_from(
 			boost::asio::buffer(data, max_length), sender_endpoint);
-		sock.send_to(boost::asio::buffer(data, length), sender_endpoint);
+		std::cout << "Message received\n";
+		//sock.send_to(boost::asio::buffer(data, length), sender_endpoint);
 	}
 }
 
