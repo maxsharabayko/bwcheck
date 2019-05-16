@@ -7,36 +7,68 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
-
+#include <chrono>
 #include <cstdlib>
+#include <iomanip>
 #include <iostream>
+#include <thread>
+
 #include <boost/asio.hpp>
 
+using namespace std;
 using boost::asio::ip::udp;
 
 enum { max_length = 1456 };
 
-void server(boost::asio::io_context& io_context, unsigned short port)
+void server(boost::asio::io_context& io_context, unsigned short port, const atomic_bool& force_break)
 {
 	udp::socket sock(io_context, udp::endpoint(udp::v4(), port));
+	atomic_bool local_break = false;
+	atomic_size_t bytes_rcvd = 0;
+
+	auto stats_func = [&bytes_rcvd, &force_break, &local_break]()
+	{
+		auto time_prev = std::chrono::steady_clock::now();
+		while (!force_break && !local_break)
+		{
+			this_thread::sleep_for(1s);
+			const size_t bytes = bytes_rcvd.exchange(0);
+			const auto time_now = std::chrono::steady_clock::now();
+			
+			const auto elapsed_ms = chrono::duration_cast<chrono::milliseconds>(time_now - time_prev);
+			time_prev = time_now;
+
+			if (bytes == 0)
+				continue;
+
+			cout << "RCV rate: " << std::fixed << std::setprecision(3) << float(bytes * 8) / elapsed_ms.count() / 1000 << " Mbps\n";
+		}
+	};
+
+	auto stats_logger = async(launch::async, stats_func);
+
 	for (;;)
 	{
 		char data[max_length];
 		udp::endpoint sender_endpoint;
 		size_t length = sock.receive_from(
 			boost::asio::buffer(data, max_length), sender_endpoint);
-		std::cout << "Message received\n";
+		//std::cout << "Message received: length " << length << "\n";
+		bytes_rcvd += length;
 		//sock.send_to(boost::asio::buffer(data, length), sender_endpoint);
 	}
+
+	local_break = true;
+	stats_logger.wait();
 }
 
-int udp_server(const std::string& port)
+int udp_server(const std::string& port, const atomic_bool& force_break)
 {
 	try
 	{
 		boost::asio::io_context io_context;
 
-		server(io_context, stoi(port));
+		server(io_context, stoi(port), force_break);
 	}
 	catch (std::exception & e)
 	{

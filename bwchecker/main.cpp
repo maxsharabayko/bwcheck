@@ -8,7 +8,7 @@
 
 int tcp_server(const std::string& port);
 int tcp_client(const std::string& host, const std::string& port);
-int udp_server(const std::string& port);
+int udp_server(const std::string& port, const std::atomic_bool& force_break);
 int udp_client(const std::string& host, const std::string& port,
 	const config& cfg, std::atomic_bool& force_break);
 
@@ -48,8 +48,8 @@ int main(int argc, char** argv) {
 
 	CLI11_PARSE(app, argc, argv);
 
-	signal(SIGINT,  OnINT_ForceExit);
-	signal(SIGTERM, OnINT_ForceExit);
+	//signal(SIGINT,  OnINT_ForceExit);
+	//signal(SIGTERM, OnINT_ForceExit);
 
 	// TODO: Callback for subcommands
 	// https://cliutils.gitlab.io/CLI11Tutorial/chapters/an-advanced-example.html
@@ -65,7 +65,7 @@ int main(int argc, char** argv) {
 		if (*use_tcp)
 			return tcp_server(port);
 
-		return udp_server(port);
+		return udp_server(port, force_break);
 	}
 
 	return 0;
