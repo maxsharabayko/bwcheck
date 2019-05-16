@@ -23,8 +23,8 @@ enum { max_length = 1456 };
 void server(boost::asio::io_context& io_context, unsigned short port, const atomic_bool& force_break)
 {
 	udp::socket sock(io_context, udp::endpoint(udp::v4(), port));
-	atomic_bool local_break = false;
-	atomic_size_t bytes_rcvd = 0;
+	atomic_bool local_break(false);
+	atomic_size_t bytes_rcvd(0);
 
 	auto stats_func = [&bytes_rcvd, &force_break, &local_break]()
 	{

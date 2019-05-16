@@ -26,6 +26,7 @@ cd boost_1_70_0/
 ./bootstrap.sh --prefix=/usr
 ./b2 stage threading=multi link=static --with-date_time --with-filesystem --with-system --with-regex
 sudo ./b2 install threading=multi link=static --with-date_time --with-filesystem --with-system --with-regex
+sudo ln -svf detail/sha1.hpp /usr/include/boost/uuid/sha1.hpp
 ```
 
 
