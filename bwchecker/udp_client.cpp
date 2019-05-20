@@ -11,6 +11,7 @@
 #include <chrono>
 #include <cstdlib>
 #include <cstring>
+#include <iomanip>
 #include <iostream>
 #include <vector>
 #include <boost/asio.hpp>
@@ -25,6 +26,10 @@ int udp_client(const std::string& host, const std::string& port,
 	const config& cfg, std::atomic_bool &force_break)
 {
 	using namespace std;
+	atomic_bool local_break(false);
+
+	future<void> stats_logger;
+
 	try
 	{
 		boost::asio::io_context io_context;
@@ -43,6 +48,33 @@ int udp_client(const std::string& host, const std::string& port,
 		const long msgs_per_s = static_cast<long long>(cfg.bitrate / 8) / cfg.message_size;
 		const long msg_interval_us = msgs_per_s ? 1000000 / msgs_per_s : 0;
 
+		atomic_size_t bytes_snd(0);
+
+		auto stats_func = [&bytes_snd, &force_break, &local_break]()
+		{
+			auto time_prev = std::chrono::steady_clock::now();
+			while (!force_break && !local_break)
+			{
+				this_thread::sleep_for(1s);
+
+				if (force_break || local_break)
+					break;
+
+				const size_t bytes = bytes_snd.exchange(0);
+				const auto time_now = std::chrono::steady_clock::now();
+
+				const auto elapsed_ms = chrono::duration_cast<chrono::milliseconds>(time_now - time_prev);
+				time_prev = time_now;
+
+				if (bytes == 0)
+					continue;
+
+				cout << "SND rate: " << std::fixed << std::setprecision(3) << float(bytes * 8) / elapsed_ms.count() / 1000 << " Mbps";
+				cout << " (" << bytes << ")\n";
+			}
+		};
+
+		stats_logger = async(launch::async, stats_func);
 
 		for (int i = 0; (cfg.num_messages < 0 || i < cfg.num_messages) && !force_break; ++i)
 		{
@@ -66,21 +98,16 @@ int udp_client(const std::string& host, const std::string& port,
 
 			message_to_send[0] = '0' + i % 74;
 
-			s.send_to(boost::asio::buffer(message_to_send, message_to_send.size()), *endpoints.begin());
+			bytes_snd += s.send_to(boost::asio::buffer(message_to_send, message_to_send.size()), *endpoints.begin());
 		}
-
-		/*char reply[max_length];
-		udp::endpoint sender_endpoint;
-		size_t reply_length = s.receive_from(
-			boost::asio::buffer(reply, max_length), sender_endpoint);
-		std::cout << "Reply is: ";
-		std::cout.write(reply, reply_length);
-		std::cout << "\n";*/
 	}
 	catch (std::exception & e)
 	{
 		std::cerr << "Exception: " << e.what() << "\n";
 	}
+
+	local_break = true;
+	stats_logger.wait();
 
 	return 0;
 }

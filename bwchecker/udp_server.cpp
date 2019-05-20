@@ -32,6 +32,10 @@ void server(boost::asio::io_context& io_context, unsigned short port, const atom
 		while (!force_break && !local_break)
 		{
 			this_thread::sleep_for(1s);
+
+			if (force_break || local_break)
+				break;
+
 			const size_t bytes = bytes_rcvd.exchange(0);
 			const auto time_now = std::chrono::steady_clock::now();
 			
@@ -52,11 +56,10 @@ void server(boost::asio::io_context& io_context, unsigned short port, const atom
 	{
 		char data[max_length];
 		udp::endpoint sender_endpoint;
-		size_t length = sock.receive_from(
+		const size_t length = sock.receive_from(
 			boost::asio::buffer(data, max_length), sender_endpoint);
-		//std::cout << "Message received: length " << length << "\n";
+
 		bytes_rcvd += length;
-		//sock.send_to(boost::asio::buffer(data, length), sender_endpoint);
 	}
 
 	local_break = true;
