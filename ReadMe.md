@@ -29,8 +29,22 @@ sudo ./b2 install threading=multi link=static --with-date_time --with-filesystem
 sudo ln -svf detail/sha1.hpp /usr/include/boost/uuid/sha1.hpp
 ```
 
+### Windows
 
+```
 b2 --toolset=msvc-14.2 link=static runtime-link=shared address-model=64 define=BOOST_USE_WINAPI_VERSION=0x0501 --with-chrono --with-date_time --with-filesystem --with-program_options --with-system --with-regex
 
-
 cmake ../ -G "Visual Studio 16 2019" -A x64
+```
+
+# Running
+
+## Client
+```
+./bwcheck client host port --num 1000000 --bitrate 1000000000
+```
+
+## Server
+```
+./bwcheck server port
+```
