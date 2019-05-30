@@ -48,3 +48,19 @@ cmake ../ -G "Visual Studio 16 2019" -A x64
 ```
 ./bwcheck server port
 ```
+
+# Long-term test
+
+## Clent
+
+Conenct to server, send 474924 UDP packets with payload of 1456 bytes. Repeat 36 times with 1200 seconds between consecutive runs.
+```
+./bwcheck client 192.168.0.110 4200 --num 474924 --testruns 36 --testruninterval 1200 --msgsize 1456
+```
+
+## Server
+```
+./bwcheck server port
+```
+
+
