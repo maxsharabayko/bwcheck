@@ -34,7 +34,7 @@ void server(boost::asio::io_context& io_context, unsigned short port, const atom
 		auto time_prev = std::chrono::steady_clock::now();
 		while (!force_break && !local_break)
 		{
-			this_thread::sleep_for(1s);
+			this_thread::sleep_for(chrono::seconds(1));
 
 			if (force_break || local_break)
 				break;
