@@ -30,7 +30,7 @@ void server(boost::asio::io_context& io_context, unsigned short port, const atom
 
 	auto stats_func = [&bytes_rcvd, &force_break, &local_break]()
 	{
-		cout << "Time;ReceivingMbps;ReceivedBytes";
+		cout << "Time;ReceivingMbps;ReceivedBytes\n";
 		auto time_prev = std::chrono::steady_clock::now();
 		while (!force_break && !local_break)
 		{

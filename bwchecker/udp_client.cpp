@@ -55,7 +55,7 @@ int udp_client(const std::string& host, const std::string& port,
 
 		auto stats_func = [&bytes_snd, &force_break, &local_break]()
 		{
-			cout << "Time;SendingMbps;SendingBytes";
+			cout << "Time;SendingMbps;SendingBytes\n";
 			auto time_prev = std::chrono::steady_clock::now();
 			while (!force_break && !local_break)
 			{
