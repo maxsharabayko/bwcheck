@@ -15,6 +15,6 @@ inline std::string print_time()
 	strftime(tmp_buf, 512, "%T.", tm);
 #endif
 	ostringstream out;
-	out << tmp_buf << setfill('0') << setw(6) << usec << " ";
+	out << tmp_buf << setfill('0') << setw(6) << usec;
 	return out.str();
 }
