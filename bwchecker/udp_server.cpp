@@ -15,6 +15,8 @@
 
 #include <boost/asio.hpp>
 
+#include "bwutils.hpp"
+
 using namespace std;
 using boost::asio::ip::udp;
 
@@ -28,6 +30,7 @@ void server(boost::asio::io_context& io_context, unsigned short port, const atom
 
 	auto stats_func = [&bytes_rcvd, &force_break, &local_break]()
 	{
+		cout << "Time;ReceivingMbps;ReceivedBytes";
 		auto time_prev = std::chrono::steady_clock::now();
 		while (!force_break && !local_break)
 		{
@@ -45,8 +48,9 @@ void server(boost::asio::io_context& io_context, unsigned short port, const atom
 			if (bytes == 0)
 				continue;
 
-			cout << "RCV rate: " << std::fixed << std::setprecision(3) << float(bytes * 8) / elapsed_ms.count() / 1000 << " Mbps";
-			cout << " (" << bytes << ")\n";
+			cout << print_time() << ";";
+			cout << std::fixed << std::setprecision(3) << float(bytes * 8) / elapsed_ms.count() / 1000 << ";";
+			cout << bytes << "\n";
 		}
 	};
 

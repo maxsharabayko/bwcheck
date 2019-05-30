@@ -41,6 +41,8 @@ int main(int argc, char** argv) {
 	sc_client->add_option("--msgsize", cfg.message_size, "Destination URI");
 	sc_client->add_option("--bitrate", cfg.bitrate, "Bitrate to generate");
 	sc_client->add_option("--num", cfg.num_messages, "Number of messages to send (-1 for infinite)");
+	sc_client->add_option("--testruns", cfg.test_runs, "Number of test runs (default 1)");
+	sc_client->add_option("--testruninterval", cfg.test_run_interval_s, "Interval between consecutive test runs (default 0)");
 	CLI::App* sc_server = app.add_subcommand("server", "Start server")->fallthrough();
 	sc_server->add_option("port", port, "Port");
 

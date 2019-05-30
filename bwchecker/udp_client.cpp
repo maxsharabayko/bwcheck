@@ -17,10 +17,13 @@
 #include <boost/asio.hpp>
 
 #include "config.hpp"
+#include "bwutils.hpp"
 
 using boost::asio::ip::udp;
 
 enum { max_length = 1456 };
+
+
 
 int udp_client(const std::string& host, const std::string& port,
 	const config& cfg, std::atomic_bool &force_break)
@@ -52,10 +55,11 @@ int udp_client(const std::string& host, const std::string& port,
 
 		auto stats_func = [&bytes_snd, &force_break, &local_break]()
 		{
+			cout << "Time;SendingMbps;SendingBytes";
 			auto time_prev = std::chrono::steady_clock::now();
 			while (!force_break && !local_break)
 			{
-				this_thread::sleep_for(1s);
+				this_thread::sleep_for(chrono::seconds(1));
 
 				if (force_break || local_break)
 					break;
@@ -69,36 +73,42 @@ int udp_client(const std::string& host, const std::string& port,
 				if (bytes == 0)
 					continue;
 
-				cout << "SND rate: " << std::fixed << std::setprecision(3) << float(bytes * 8) / elapsed_ms.count() / 1000 << " Mbps";
-				cout << " (" << bytes << ")\n";
+				cout << print_time() << ";";
+				cout << std::fixed << std::setprecision(3) << float(bytes * 8) / elapsed_ms.count() / 1000 << ";";
+				cout << bytes << "\n";
 			}
 		};
 
 		stats_logger = async(launch::async, stats_func);
 
-		for (int i = 0; (cfg.num_messages < 0 || i < cfg.num_messages) && !force_break; ++i)
+		for (int test_run = 0; test_run <= cfg.test_runs; ++test_run)
 		{
-			if (cfg.bitrate)
+			for (int i = 0; (cfg.num_messages < 0 || i < cfg.num_messages) && !force_break; ++i)
 			{
-				const long duration_us = time_dev_us > msg_interval_us ? 0 : (msg_interval_us - time_dev_us);
-				const auto next_time = time_prev + chrono::microseconds(duration_us);
-				chrono::time_point<chrono::steady_clock> time_now;
-				for (;;)
+				if (cfg.bitrate)
 				{
-					time_now = chrono::steady_clock::now();
-					if (time_now >= next_time)
-						break;
-					if (force_break)
-						break;
+					const long duration_us = time_dev_us > msg_interval_us ? 0 : (msg_interval_us - time_dev_us);
+					const auto next_time = time_prev + chrono::microseconds(duration_us);
+					chrono::time_point<chrono::steady_clock> time_now;
+					for (;;)
+					{
+						time_now = chrono::steady_clock::now();
+						if (time_now >= next_time)
+							break;
+						if (force_break)
+							break;
+					}
+
+					time_dev_us += (long)chrono::duration_cast<chrono::microseconds>(time_now - time_prev).count() - msg_interval_us;
+					time_prev = time_now;
 				}
 
-				time_dev_us += (long)chrono::duration_cast<chrono::microseconds>(time_now - time_prev).count() - msg_interval_us;
-				time_prev = time_now;
+				message_to_send[0] = '0' + i % 74;
+
+				bytes_snd += s.send_to(boost::asio::buffer(message_to_send, message_to_send.size()), *endpoints.begin());
 			}
 
-			message_to_send[0] = '0' + i % 74;
-
-			bytes_snd += s.send_to(boost::asio::buffer(message_to_send, message_to_send.size()), *endpoints.begin());
+			this_thread::sleep_for(chrono::seconds(cfg.test_run_interval_s));
 		}
 	}
 	catch (std::exception & e)
