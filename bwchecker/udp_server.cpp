@@ -50,7 +50,7 @@ void server(boost::asio::io_context& io_context, unsigned short port, const atom
 
 			cout << print_time() << ";";
 			cout << std::fixed << std::setprecision(3) << float(bytes * 8) / elapsed_ms.count() / 1000 << ";";
-			cout << bytes << "\n";
+			cout << bytes << "\n" << flush;
 		}
 	};
 

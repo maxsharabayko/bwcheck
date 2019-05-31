@@ -75,7 +75,7 @@ int udp_client(const std::string& host, const std::string& port,
 
 				cout << print_time() << ";";
 				cout << std::fixed << std::setprecision(3) << float(bytes * 8) / elapsed_ms.count() / 1000 << ";";
-				cout << bytes << "\n";
+				cout << bytes << "\n" << flush;
 			}
 		};
 
