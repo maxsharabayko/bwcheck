@@ -32,57 +32,57 @@ int udp_client(const std::string& host, const std::string& port,
 	atomic_bool local_break(false);
 
 	future<void> stats_logger;
+	cout << "Time;SendingMbps;SendingBytes\n";
 
-	try
+	for (int test_run = 0; test_run <= cfg.test_runs; ++test_run)
 	{
-		boost::asio::io_context io_context;
-
-		udp::socket s(io_context, udp::endpoint(udp::v4(), 0));
-
-		udp::resolver resolver(io_context);
-		udp::resolver::results_type endpoints =
-			resolver.resolve(udp::v4(), host, port);
-
-		std::vector<char> message_to_send(cfg.message_size);
-		std::generate(message_to_send.begin(), message_to_send.end(), [c = 0]() mutable { return c++; });
-
-		auto time_prev = chrono::steady_clock::now();
-		long time_dev_us = 0;
-		const long msgs_per_s = static_cast<long long>(cfg.bitrate / 8) / cfg.message_size;
-		const long msg_interval_us = msgs_per_s ? 1000000 / msgs_per_s : 0;
-
-		atomic_size_t bytes_snd(0);
-
-		auto stats_func = [&bytes_snd, &force_break, &local_break]()
+		try
 		{
-			cout << "Time;SendingMbps;SendingBytes\n";
-			auto time_prev = std::chrono::steady_clock::now();
-			while (!force_break && !local_break)
+			boost::asio::io_context io_context;
+
+			udp::socket s(io_context, udp::endpoint(udp::v4(), 0));
+
+			udp::resolver resolver(io_context);
+			udp::resolver::results_type endpoints =
+				resolver.resolve(udp::v4(), host, port);
+
+			std::vector<char> message_to_send(cfg.message_size);
+			std::generate(message_to_send.begin(), message_to_send.end(), [c = 0]() mutable { return c++; });
+
+			auto time_prev = chrono::steady_clock::now();
+			long time_dev_us = 0;
+			const long msgs_per_s = static_cast<long long>(cfg.bitrate / 8) / cfg.message_size;
+			const long msg_interval_us = msgs_per_s ? 1000000 / msgs_per_s : 0;
+
+			atomic_size_t bytes_snd(0);
+
+			auto stats_func = [&bytes_snd, &force_break, &local_break]()
 			{
-				this_thread::sleep_for(chrono::seconds(1));
+				auto time_prev = std::chrono::steady_clock::now();
+				while (!force_break && !local_break)
+				{
+					this_thread::sleep_for(chrono::seconds(1));
 
-				if (force_break || local_break)
-					break;
+					if (force_break || local_break)
+						break;
 
-				const size_t bytes = bytes_snd.exchange(0);
-				const auto time_now = std::chrono::steady_clock::now();
+					const size_t bytes = bytes_snd.exchange(0);
+					const auto time_now = std::chrono::steady_clock::now();
 
-				const auto elapsed_ms = chrono::duration_cast<chrono::milliseconds>(time_now - time_prev);
-				time_prev = time_now;
+					const auto elapsed_ms = chrono::duration_cast<chrono::milliseconds>(time_now - time_prev);
+					time_prev = time_now;
 
-				if (bytes == 0)
-					continue;
+					if (bytes == 0)
+						continue;
 
-				cout << print_time() << ";";
-				cout << std::fixed << std::setprecision(3) << float(bytes * 8) / elapsed_ms.count() / 1000 << ";";
-				cout << bytes << "\n" << flush;
-			}
-		};
+					cout << print_time() << ";";
+					cout << std::fixed << std::setprecision(3) << float(bytes * 8) / elapsed_ms.count() / 1000 << ";";
+					cout << bytes << "\n" << flush;
+				}
+			};
 
-		stats_logger = async(launch::async, stats_func);
+			stats_logger = async(launch::async, stats_func);
 
-		for (int test_run = 0; test_run <= cfg.test_runs; ++test_run)
-		{
 			for (int i = 0; (cfg.num_messages < 0 || i < cfg.num_messages) && !force_break; ++i)
 			{
 				if (cfg.bitrate)
@@ -108,16 +108,18 @@ int udp_client(const std::string& host, const std::string& port,
 				bytes_snd += s.send_to(boost::asio::buffer(message_to_send, message_to_send.size()), *endpoints.begin());
 			}
 
-			this_thread::sleep_for(chrono::seconds(cfg.test_run_interval_s));
 		}
-	}
-	catch (std::exception & e)
-	{
-		std::cerr << "Exception: " << e.what() << "\n";
-	}
+		catch (std::exception & e)
+		{
+			std::cerr << "Exception: " << e.what() << "\n";
+		}
 
-	local_break = true;
-	stats_logger.wait();
+		local_break = true;
+		stats_logger.wait();
+		local_break = false;
+
+		this_thread::sleep_for(chrono::seconds(cfg.test_run_interval_s));
+	}
 
 	return 0;
 }
