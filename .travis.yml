@@ -1,0 +1,60 @@
+language: cpp
+dist: trusty
+sudo: false
+os: linux
+
+matrix:
+  include:
+    - env: COMPILER=g++-6 BUILD=Debug STANDARD=14
+      compiler: gcc
+      addons:
+        apt:
+          update: true
+          sources:
+            - sourceline: 'ppa:mhier/libboost-latest'
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-6
+            - boost1.70
+    - env: COMPILER=g++-6 BUILD=Release STANDARD=14
+      compiler: gcc
+      addons:
+        apt:
+          update: true
+          sources:
+            - sourceline: 'ppa:mhier/libboost-latest'
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-6
+            - boost1.70
+
+#addons:
+#  sonarcloud:
+#    organization: "sonarcloud"
+#    token:
+#      secure: 
+
+script:
+  - git submodule init
+  - git submodule update
+  - cmake .
+  - cmake --build .
+  # Wraps the compilation with the Build Wrapper to generate configuration (used
+  # later by the SonarQube Scanner) into the "bw-output" folder
+  #- build-wrapper-linux-x86-64 --out-dir bw-output make all
+  # Execute some tests
+  #- make test
+  # And finally run the SonarQube analysis - read the "sonar-project.properties"
+  # file to see the specific configuration
+  #- sonar-scanner
+
+cache:
+  directories:
+    - '$HOME/.sonar/cache'
+
+# Don't copy the following part if your usnig this project as a starting point of yours
+#notifications:
+#  email: false
+#  webhooks:
+#    - secure: "ouG1h56cuJejRCsCHZOc4X0lDrpZyaiXOmzYMX0qnKXsjx17ZRMdkunA11pzrABAzO2l4rq5aMMNLs2Obwp/jiuV11SeyucgGzgqwdUQivR9noqpI9yq9VeaRBuK8dHMG0RtRVH0HAdv53VaPBYExj860FdBOUMzgvxE1v7EPIqpfbC9XcIPkZoIkMCP0E8nBE5R3is1ZY49fgFi3+UpQP5EjfeX2E8n0tHzs6uwO7QcnB0GNfUcjKGShjxecPEB77oIv8kcaIEqUBdRsuwwIfidtOsgggGpchaeJ1kEVTESLDz7QPf73ng4j9LP7whb0rtVZYpUr+TI0MoLZu5/WptErelei1eBniHR8CbSbhi6FQ07Pyx7DAc9xmBjgBVbLY/RROGfguAPd+AWn/E6WthN31q6/EpeX7wOkNDjOk6CUPqGgHpQ4BJDy82uV8N3H/uMaonwCeyxKhWxlOWGWBEUwN3rXRt63wMNYABemBiXdjlVxnh1949Drhd+LBS1ebeikq5SmOrZCA2IrHPcTEAtU7bCaCoe5vOm9XYQmxfrNg88aiQR26SjVK2A55x2t8DXqkjS8/7Q9k7gg5CBG5iEOdrSPw8UKTuy2t8SaUlaidyZTdbUT5L3v/UKgucex+hRN8AzWDJ6u9Hl2qdaxZKOSJjo+NV7ZsLxrVvafrg="
+#  on_start: always

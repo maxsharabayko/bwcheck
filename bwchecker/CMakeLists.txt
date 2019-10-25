@@ -1,4 +1,3 @@
-cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
 project(bwcheck)
 set (CMAKE_CXX_STANDARD 14)
 FILE(GLOB SOURCES *.cpp *.hpp)
