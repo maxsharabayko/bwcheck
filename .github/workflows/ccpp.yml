@@ -14,6 +14,6 @@ jobs:
     - name: subodule update
       run: git submodule update
     - name: configure
-      run: cmake ../
+      run: cmake ./
     - name: make
       run: cmake --build ./
