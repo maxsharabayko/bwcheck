@@ -18,7 +18,7 @@ jobs:
     - name: Build boost
       run: tar -C ./ -jxf boost_1_70_0.tar.bz2 && cd boost_1_70_0/ && ./bootstrap.sh --prefix=/usr && ./b2 stage threading=multi link=static --with-date_time --with-filesystem --with-system --with-regex
     - name: Install boost
-      run: sudo ./b2 install threading=multi link=static --with-date_time --with-filesystem --with-system --with-regex
+      run: cd boost_1_70_0/ && sudo ./b2 install threading=multi link=static --with-date_time --with-filesystem --with-system --with-regex
     - name: configure
       run: cmake ./
     - name: make
