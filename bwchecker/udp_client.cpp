@@ -24,7 +24,6 @@ using boost::asio::ip::udp;
 enum { max_length = 1456 };
 
 
-
 int udp_client(const std::string& host, const std::string& port,
 	const config& cfg, std::atomic_bool &force_break)
 {
