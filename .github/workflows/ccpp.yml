@@ -14,8 +14,11 @@ jobs:
     - name: subodule update
       run: git submodule update
     - name: Get boost
-      run: wget -O boost_1_70_0.tar.gz https://dl.bintray.com/boostorg/release/1.70.0/source/boost_1_70_0.tar.gz
-           tar xzvf boost_1_70_0.tar.gz
+      run: wget https://dl.bintray.com/boostorg/release/1.70.0/source/boost_1_70_0.tar.bz2
+    - name: Build boost
+      run: tar -C ./ -jxf boost_1_70_0.tar.bz2 && cd boost_1_70_0/ && ./bootstrap.sh --prefix=/usr && ./b2 stage threading=multi link=static --with-date_time --with-filesystem --with-system --with-regex
+    - name: Install boost
+      run: sudo ./b2 install threading=multi link=static --with-date_time --with-filesystem --with-system --with-regex
     - name: configure
       run: cmake ./
     - name: make
