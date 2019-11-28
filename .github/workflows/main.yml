@@ -7,7 +7,7 @@ jobs:
     steps:
     - name: Hello world action step
       id: hello
-      uses: maxlovic/hello-world-javascript-action
+      uses: maxlovic/hello-world-javascript-action@50b0629ab7369c3c8e153c54b6f22a133062cd5e
       with:
         who-to-greet: 'Max'
     # Use the output from the `hello` step
